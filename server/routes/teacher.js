@@ -89,3 +89,38 @@ router.post("/performance", async (req, res) => {
 });
 
 module.exports = router;
+
+// POST /api/teacher/assignments — create a homework assignment for a class
+router.post("/assignments", async (req, res) => {
+  try {
+    const teacherId = await getTeacherId(req.user.userId);
+    const { title, description, classId, subjectId, dueDate } = req.body;
+
+    if (!title || !classId || !subjectId || !dueDate) {
+      return res.status(400).json({ error: "title, classId, subjectId, and dueDate are required." });
+    }
+
+    const assignment = await prisma.assignment.create({
+      data: { title, description, classId, subjectId, teacherId, dueDate: new Date(dueDate) },
+    });
+    res.status(201).json(assignment);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create assignment." });
+  }
+});
+
+// GET /api/teacher/assignments — list assignments this teacher created
+router.get("/assignments", async (req, res) => {
+  try {
+    const teacherId = await getTeacherId(req.user.userId);
+    const assignments = await prisma.assignment.findMany({
+      where: { teacherId },
+      include: { class: true, subject: true, submissions: true },
+      orderBy: { dueDate: "desc" },
+    });
+    res.json(assignments);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load assignments." });
+  }
+});

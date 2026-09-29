@@ -7,7 +7,8 @@ const navItems = [
   { label: "Overview", to: "/dashboard/admin" },
   { label: "Users", to: "/dashboard/admin/users" },
   { label: "Classes & Teachers", to: "/dashboard/admin/classes" },
-  { label: "Performance", to: "/dashboard/admin/performance" },
+  { label: "Timetable", to: "/dashboard/admin/timetable" },
+  { label: "Holiday Quizzes", to: "/dashboard/admin/quizzes" },
 ];
 
 export default function AdminDashboard() {

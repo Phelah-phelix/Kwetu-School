@@ -9,7 +9,19 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./dashboard/AdminDashboard";
+import AdminUsers from "./dashboard/admin/AdminUsers";
+import AdminClasses from "./dashboard/admin/AdminClasses";
+import AdminTimetable from "./dashboard/admin/AdminTimetable";
+import AdminQuizzes from "./dashboard/admin/AdminQuizzes";
 import TeacherDashboard from "./dashboard/TeacherDashboard";
+import TeacherAssignments from "./dashboard/teacher/TeacherAssignments";
+import StudentDashboard from "./dashboard/StudentDashboard";
+import StudentAssignments from "./dashboard/student/StudentAssignments";
+import StudentQuizzes from "./dashboard/student/StudentQuizzes";
+import QuizAttempt from "./dashboard/student/QuizAttempt";
+import ParentDashboard from "./dashboard/ParentDashboard";
+import PrincipalDashboard from "./dashboard/PrincipalDashboard";
+import WorkerDashboard from "./dashboard/WorkerDashboard";
 
 function PublicLayout({ children }) {
   return (
@@ -41,10 +53,118 @@ export default function App() {
       />
 
       <Route
+        path="/dashboard/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <AdminUsers />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/admin/classes"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <AdminClasses />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/admin/timetable"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <AdminTimetable />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/admin/quizzes"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <AdminQuizzes />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/dashboard/teacher"
         element={
           <ProtectedRoute allowedRoles={["TEACHER"]}>
             <TeacherDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/teacher/assignments"
+        element={
+          <ProtectedRoute allowedRoles={["TEACHER"]}>
+            <TeacherAssignments />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/student"
+        element={
+          <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <StudentDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/student/assignments"
+        element={
+          <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <StudentAssignments />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/student/quizzes"
+        element={
+          <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <StudentQuizzes />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/student/quizzes/:id"
+        element={
+          <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <QuizAttempt />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/parent"
+        element={
+          <ProtectedRoute allowedRoles={["PARENT"]}>
+            <ParentDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/principal"
+        element={
+          <ProtectedRoute allowedRoles={["PRINCIPAL"]}>
+            <PrincipalDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/worker"
+        element={
+          <ProtectedRoute allowedRoles={["WORKER"]}>
+            <WorkerDashboard />
           </ProtectedRoute>
         }
       />

@@ -3,7 +3,10 @@ import DashboardLayout from "./DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { getTeacherClasses, getClassStudents, recordPerformance } from "../lib/api";
 
-const navItems = [{ label: "My Classes", to: "/dashboard/teacher" }];
+const navItems = [
+  { label: "My Classes", to: "/dashboard/teacher" },
+  { label: "Assignments", to: "/dashboard/teacher/assignments" },
+];
 
 const COMPETENCY_LEVELS = [
   "Exceeding Expectation",
