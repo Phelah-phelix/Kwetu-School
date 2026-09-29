@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  PRINCIPAL
+  TEACHER
+  STUDENT
+  PARENT
+  WORKER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  fullName     String
+  phone        String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Role-specific profiles (only one will be set, depending on `role`)
+  teacherProfile Teacher?
+  studentProfile Student?
+  parentProfile  Parent?
+  workerProfile  Worker?
+
+  @@map("users")
+}
+
+model Teacher {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staffNumber   String   @unique
+  tscNumber     String?  // Teachers Service Commission number, Kenya-specific, optional
+  specialization String? // e.g. "Mathematics", "STEM Pathway"
+  assignments   TeacherAssignment[]
+  performanceRecords PerformanceRecord[]
+  timetableSlots TimetableSlot[]
+  homeworkAssignments Assignment[]
+  createdAt     DateTime @default(now())
+
+  @@map("teachers")
+}
+
+model Student {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  admissionNumber       String    @unique
+  birthCertificateNumber String?  @unique
+  nationalId            String?   @unique
+  dateOfBirth           DateTime?
+  gender                String?
+  pathway               String?   // e.g. "STEM", "Social Sciences", "Arts & Sports Science"
+
+  parentId              String?
+  parent                Parent?   @relation(fields: [parentId], references: [id])
+
+  classId               String?
+  class                 Class?    @relation(fields: [classId], references: [id])
+
+  performanceRecords    PerformanceRecord[]
+  submissions           AssignmentSubmission[]
+  quizAttempts          QuizAttempt[]
+
+  createdAt             DateTime  @default(now())
+
+  @@map("students")
+}
+
+model Parent {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occupation String?
+  address   String?
+  children  Student[]
+  createdAt DateTime  @default(now())
+
+  @@map("parents")
+}
+
+model Worker {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staffNumber String  @unique
+  department String   // e.g. "Kitchen", "Security", "Admin Office", "Grounds"
+  jobTitle   String   // e.g. "Cook", "Groundsman", "Office Clerk"
+  createdAt  DateTime @default(now())
+
+  @@map("workers")
+}
+
+model Class {
+  id        String    @id @default(cuid())
+  name      String    // e.g. "Grade 10 East", "Grade 11 STEM A"
+  gradeLevel Int       // e.g. 10, 11, 12
+  pathway   String?   // matches Student.pathway for senior classes
+  students  Student[]
+  assignments TeacherAssignment[]
+  timetableSlots TimetableSlot[]
+  homeworkAssignments Assignment[]
+  createdAt DateTime  @default(now())
+
+  @@map("classes")
+}
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g. "Mathematics", "Biology", "Kiswahili"
+  code        String?  @unique // e.g. "MATH101"
+  assignments TeacherAssignment[]
+  timetableSlots TimetableSlot[]
+  performanceRecords PerformanceRecord[]
+  homeworkAssignments Assignment[]
+  holidayQuizzes HolidayQuiz[]
+  createdAt   DateTime @default(now())
+
+  @@map("subjects")
+}
+
+// Links a Teacher to a Subject they teach in a specific Class
+model TeacherAssignment {
+  id        String   @id @default(cuid())
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([teacherId, classId, subjectId])
+  @@map("teacher_assignments")
+}
+
+enum Term {
+  TERM_1
+  TERM_2
+  TERM_3
+}
+
+// CBC continuous assessment record for a student in a subject
+model PerformanceRecord {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId  String
+  teacher    Teacher  @relation(fields: [teacherId], references: [id])
+  term       Term
+  year       Int
+  score      Float    // raw score, e.g. out of 100
+  competencyLevel String // CBC levels: "Exceeding", "Meeting", "Approaching", "Below Expectation"
+  remarks    String?
+  recordedAt DateTime @default(now())
+
+  @@map("performance_records")
+}
+
+model TimetableSlot {
+  id        String   @id @default(cuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id])
+  dayOfWeek Int      // 1 = Monday ... 5 = Friday
+  startTime String   // "08:00"
+  endTime   String   // "08:40"
+
+  @@map("timetable_slots")
+}
+
+model Assignment {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  classId     String
+  class       Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId   String
+  teacher     Teacher   @relation(fields: [teacherId], references: [id])
+  dueDate     DateTime
+  submissions AssignmentSubmission[]
+  createdAt   DateTime  @default(now())
+
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id           String     @id @default(cuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  submittedAt  DateTime?
+  fileUrl      String?
+  grade        Float?
+  feedback     String?
+
+  @@unique([assignmentId, studentId])
+  @@map("assignment_submissions")
+}
+
+model HolidayQuiz {
+  id          String   @id @default(cuid())
+  title       String
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  gradeLevel  Int
+  openDate    DateTime
+  closeDate   DateTime
+  questions   QuizQuestion[]
+  attempts    QuizAttempt[]
+  createdAt   DateTime @default(now())
+
+  @@map("holiday_quizzes")
+}
+
+model QuizQuestion {
+  id            String      @id @default(cuid())
+  quizId        String
+  quiz          HolidayQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question      String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String      // "A" | "B" | "C" | "D"
+
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id         String      @id @default(cuid())
+  quizId     String
+  quiz       HolidayQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score      Float
+  submittedAt DateTime   @default(now())
+
+  @@unique([quizId, studentId])
+  @@map("quiz_attempts")
+}
